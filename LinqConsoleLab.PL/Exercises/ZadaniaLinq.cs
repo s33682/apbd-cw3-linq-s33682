@@ -4,154 +4,67 @@ namespace LinqConsoleLab.PL.Exercises;
 
 public sealed class ZadaniaLinq
 {
-    /// <summary>
-    /// Zadanie:
-    /// Wyszukaj wszystkich studentów mieszkających w Warsaw.
-    /// Zwróć numer indeksu, pełne imię i nazwisko oraz miasto.
-    ///
-    /// SQL:
-    /// SELECT NumerIndeksu, Imie, Nazwisko, Miasto
-    /// FROM Studenci
-    /// WHERE Miasto = 'Warsaw';
-    /// </summary>
     public IEnumerable<string> Zadanie01_StudenciZWarszawy()
     {
-        throw Niezaimplementowano(nameof(Zadanie01_StudenciZWarszawy));
+        return DaneUczelni.Studenci.Where(s => s.Miasto.Equals("Warsaw"))
+            .Select(s => $"{s.NumerIndeksu}, {s.Imie} {s.Nazwisko}, {s.Miasto}");
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Przygotuj listę adresów e-mail wszystkich studentów.
-    /// Użyj projekcji, tak aby w wyniku nie zwracać całych obiektów.
-    ///
-    /// SQL:
-    /// SELECT Email
-    /// FROM Studenci;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie02_AdresyEmailStudentow()
     {
-        throw Niezaimplementowano(nameof(Zadanie02_AdresyEmailStudentow));
+        return DaneUczelni.Studenci.Select(s => s.Email);
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Posortuj studentów alfabetycznie po nazwisku, a następnie po imieniu.
-    /// Zwróć numer indeksu i pełne imię i nazwisko.
-    ///
-    /// SQL:
-    /// SELECT NumerIndeksu, Imie, Nazwisko
-    /// FROM Studenci
-    /// ORDER BY Nazwisko, Imie;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie03_StudenciPosortowani()
     {
-        throw Niezaimplementowano(nameof(Zadanie03_StudenciPosortowani));
+        return DaneUczelni.Studenci.OrderBy(s => s.Nazwisko).ThenBy(s => s.Imie)
+            .Select(s => $"{s.NumerIndeksu}, {s.Imie} {s.Nazwisko}");
     }
 
-    /// <summary>
-    /// Zadanie:
-    /// Znajdź pierwszy przedmiot z kategorii Analytics.
-    /// Jeżeli taki przedmiot nie istnieje, zwróć komunikat tekstowy.
-    ///
-    /// SQL:
-    /// SELECT TOP 1 Nazwa, DataStartu
-    /// FROM Przedmioty
-    /// WHERE Kategoria = 'Analytics';
-    /// </summary>
     public IEnumerable<string> Zadanie04_PierwszyPrzedmiotAnalityczny()
     {
-        throw Niezaimplementowano(nameof(Zadanie04_PierwszyPrzedmiotAnalityczny));
+        return DaneUczelni.Przedmioty.Where(s => s.Kategoria.Equals("Analytics"))
+            .Select(s => $"{s.Nazwa}, {s.DataStartu}")
+            .Take(1)
+            .DefaultIfEmpty("Brak przedmiotów w danej kategorii");
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Sprawdź, czy w danych istnieje przynajmniej jeden nieaktywny zapis.
-    /// Zwróć jedno zdanie z odpowiedzią True/False albo Tak/Nie.
-    ///
-    /// SQL:
-    /// SELECT CASE WHEN EXISTS (
-    ///     SELECT 1
-    ///     FROM Zapisy
-    ///     WHERE CzyAktywny = 0
-    /// ) THEN 1 ELSE 0 END;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie05_CzyIstniejeNieaktywneZapisanie()
     {
-        throw Niezaimplementowano(nameof(Zadanie05_CzyIstniejeNieaktywneZapisanie));
+        return DaneUczelni.Zapisy.Where(z => z.CzyAktywny.Equals(false))
+            .Select(z => "Tak")
+            .Take(1)
+            .DefaultIfEmpty("Nie");
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Sprawdź, czy każdy prowadzący ma uzupełnioną nazwę katedry.
-    /// Warto użyć metody, która weryfikuje warunek dla całej kolekcji.
-    ///
-    /// SQL:
-    /// SELECT CASE WHEN COUNT(*) = COUNT(Katedra)
-    /// THEN 1 ELSE 0 END
-    /// FROM Prowadzacy;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie06_CzyWszyscyProwadzacyMajaKatedre()
     {
-        throw Niezaimplementowano(nameof(Zadanie06_CzyWszyscyProwadzacyMajaKatedre));
+        return [DaneUczelni.Prowadzacy.All(p => p.Katedra != null) ? "Tak" : "Nie"];
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Policz, ile aktywnych zapisów znajduje się w systemie.
-    ///
-    /// SQL:
-    /// SELECT COUNT(*)
-    /// FROM Zapisy
-    /// WHERE CzyAktywny = 1;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie07_LiczbaAktywnychZapisow()
     {
-        throw Niezaimplementowano(nameof(Zadanie07_LiczbaAktywnychZapisow));
+        return [DaneUczelni.Zapisy.Count(z => z.CzyAktywny.Equals(true)).ToString()];
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Pobierz listę unikalnych miast studentów i posortuj ją rosnąco.
-    ///
-    /// SQL:
-    /// SELECT DISTINCT Miasto
-    /// FROM Studenci
-    /// ORDER BY Miasto;
-    /// </summary>
     public IEnumerable<string> Zadanie08_UnikalneMiastaStudentow()
     {
-        throw Niezaimplementowano(nameof(Zadanie08_UnikalneMiastaStudentow));
+        return DaneUczelni.Studenci.OrderBy(s => s.Miasto)
+            .Select(s => s.Miasto)
+            .Distinct();
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Zwróć trzy najnowsze zapisy na przedmioty.
-    /// W wyniku pokaż datę zapisu, identyfikator studenta i identyfikator przedmiotu.
-    ///
-    /// SQL:
-    /// SELECT TOP 3 DataZapisu, StudentId, PrzedmiotId
-    /// FROM Zapisy
-    /// ORDER BY DataZapisu DESC;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie09_TrzyNajnowszeZapisy()
-    {
-        throw Niezaimplementowano(nameof(Zadanie09_TrzyNajnowszeZapisy));
+    {   
+        return DaneUczelni.Zapisy.OrderByDescending(z => z.DataZapisu)
+            .Take(3)
+            .Select(z => $"{z.DataZapisu}, {z.StudentId}, {z.PrzedmiotId}");
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Zaimplementuj prostą paginację dla listy przedmiotów.
-    /// Załóż stronę o rozmiarze 2 i zwróć drugą stronę danych.
-    ///
-    /// SQL:
-    /// SELECT Nazwa, Kategoria
-    /// FROM Przedmioty
-    /// ORDER BY Nazwa
-    /// OFFSET 2 ROWS FETCH NEXT 2 ROWS ONLY;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie10_DrugaStronaPrzedmiotow()
     {
-        throw Niezaimplementowano(nameof(Zadanie10_DrugaStronaPrzedmiotow));
+        return DaneUczelni.Przedmioty.OrderBy(p => p.Nazwa)
+            .Select(p => $"{p.Nazwa}, {p.Kategoria}")
+            .Skip(2).Take(2);
     }
 
     /// <summary>
