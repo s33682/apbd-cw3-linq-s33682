@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices.JavaScript;
 using LinqConsoleLab.PL.Data;
 
 namespace LinqConsoleLab.PL.Exercises;
@@ -23,18 +24,14 @@ public sealed class ZadaniaLinq
 
     public IEnumerable<string> Zadanie04_PierwszyPrzedmiotAnalityczny()
     {
-        return DaneUczelni.Przedmioty.Where(s => s.Kategoria.Equals("Analytics"))
+        return [DaneUczelni.Przedmioty.Where(s => s.Kategoria.Equals("Analytics"))
             .Select(s => $"{s.Nazwa}, {s.DataStartu}")
-            .Take(1)
-            .DefaultIfEmpty("Brak przedmiotów w danej kategorii");
+            .FirstOrDefault("Brak przedmiotów")];
     }
     
     public IEnumerable<string> Zadanie05_CzyIstniejeNieaktywneZapisanie()
     {
-        return DaneUczelni.Zapisy.Where(z => z.CzyAktywny.Equals(false))
-            .Select(z => "Tak")
-            .Take(1)
-            .DefaultIfEmpty("Nie");
+        return [DaneUczelni.Zapisy.Any(z => z.CzyAktywny.Equals(false))?"Tak":"Nie"];
     }
     
     public IEnumerable<string> Zadanie06_CzyWszyscyProwadzacyMajaKatedre()
@@ -66,172 +63,129 @@ public sealed class ZadaniaLinq
             .Select(p => $"{p.Nazwa}, {p.Kategoria}")
             .Skip(2).Take(2);
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Połącz studentów z zapisami po StudentId.
-    /// Zwróć pełne imię i nazwisko studenta oraz datę zapisu.
-    ///
-    /// SQL:
-    /// SELECT s.Imie, s.Nazwisko, z.DataZapisu
-    /// FROM Studenci s
-    /// JOIN Zapisy z ON s.Id = z.StudentId;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie11_PolaczStudentowIZapisy()
     {
-        throw Niezaimplementowano(nameof(Zadanie11_PolaczStudentowIZapisy));
+        return DaneUczelni.Studenci.Join(DaneUczelni.Zapisy, s => s.Id, z => z.StudentId,
+            (s, z) => $"{s.Imie}, {s.Nazwisko}, {z.DataZapisu}");
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Przygotuj wszystkie pary student-przedmiot na podstawie zapisów.
-    /// Użyj podejścia, które pozwoli spłaszczyć dane do jednej sekwencji wyników.
-    ///
-    /// SQL:
-    /// SELECT s.Imie, s.Nazwisko, p.Nazwa
-    /// FROM Zapisy z
-    /// JOIN Studenci s ON s.Id = z.StudentId
-    /// JOIN Przedmioty p ON p.Id = z.PrzedmiotId;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie12_ParyStudentPrzedmiot()
     {
-        throw Niezaimplementowano(nameof(Zadanie12_ParyStudentPrzedmiot));
+        return DaneUczelni.Zapisy.Join(DaneUczelni.Studenci, z => z.StudentId, s => s.Id,
+                (z, s) => new { z, s })
+            .Join(DaneUczelni.Przedmioty, zs => zs.z.PrzedmiotId, p => p.Id,
+                (zs, p) => $"{zs.s.Imie}, {zs.s.Nazwisko}, {p.Nazwa}");
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Pogrupuj zapisy według przedmiotu i zwróć nazwę przedmiotu oraz liczbę zapisów.
-    ///
-    /// SQL:
-    /// SELECT p.Nazwa, COUNT(*)
-    /// FROM Zapisy z
-    /// JOIN Przedmioty p ON p.Id = z.PrzedmiotId
-    /// GROUP BY p.Nazwa;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie13_GrupowanieZapisowWedlugPrzedmiotu()
     {
-        throw Niezaimplementowano(nameof(Zadanie13_GrupowanieZapisowWedlugPrzedmiotu));
+        return DaneUczelni.Zapisy.Join(DaneUczelni.Przedmioty, z => z.PrzedmiotId, p => p.Id,
+            (z,p) => new {z,p})
+            .GroupBy(zp => zp.p.Nazwa)
+            .Select(zp => $"{zp.Key}, {zp.Count()}");
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Oblicz średnią ocenę końcową dla każdego przedmiotu.
-    /// Pomiń rekordy, w których ocena końcowa ma wartość null.
-    ///
-    /// SQL:
-    /// SELECT p.Nazwa, AVG(z.OcenaKoncowa)
-    /// FROM Zapisy z
-    /// JOIN Przedmioty p ON p.Id = z.PrzedmiotId
-    /// WHERE z.OcenaKoncowa IS NOT NULL
-    /// GROUP BY p.Nazwa;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie14_SredniaOcenaNaPrzedmiot()
     {
-        throw Niezaimplementowano(nameof(Zadanie14_SredniaOcenaNaPrzedmiot));
+        return DaneUczelni.Zapisy.Join(DaneUczelni.Przedmioty, z => z.PrzedmiotId, p => p.Id, (z, p) => new {z,p})
+            .GroupBy(zp=>zp.p.Nazwa)
+            .Where(zp => zp.Average( x => x.z.OcenaKoncowa) != null)
+            .Select(zp => $"{zp.Key}, {zp.Average( x => x.z.OcenaKoncowa)}");
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Dla każdego prowadzącego policz liczbę przypisanych przedmiotów.
-    /// W wyniku zwróć pełne imię i nazwisko oraz liczbę przedmiotów.
-    ///
-    /// SQL:
-    /// SELECT pr.Imie, pr.Nazwisko, COUNT(p.Id)
-    /// FROM Prowadzacy pr
-    /// LEFT JOIN Przedmioty p ON p.ProwadzacyId = pr.Id
-    /// GROUP BY pr.Imie, pr.Nazwisko;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie15_ProwadzacyILiczbaPrzedmiotow()
     {
-        throw Niezaimplementowano(nameof(Zadanie15_ProwadzacyILiczbaPrzedmiotow));
+        return DaneUczelni.Prowadzacy.GroupJoin(
+                DaneUczelni.Przedmioty,
+                pr => pr.Id,
+                p => p.ProwadzacyId,
+                (pr, p) => new {pr, p}
+            )
+            .Select(prp => $"{prp.pr.Imie}, {prp.pr.Nazwisko},  {prp.p.Count()}");
     }
-
-    /// <summary>
-    /// Zadanie:
-    /// Dla każdego studenta znajdź jego najwyższą ocenę końcową.
-    /// Pomiń studentów, którzy nie mają jeszcze żadnej oceny.
-    ///
-    /// SQL:
-    /// SELECT s.Imie, s.Nazwisko, MAX(z.OcenaKoncowa)
-    /// FROM Studenci s
-    /// JOIN Zapisy z ON s.Id = z.StudentId
-    /// WHERE z.OcenaKoncowa IS NOT NULL
-    /// GROUP BY s.Imie, s.Nazwisko;
-    /// </summary>
+    
     public IEnumerable<string> Zadanie16_NajwyzszaOcenaKazdegoStudenta()
     {
-        throw Niezaimplementowano(nameof(Zadanie16_NajwyzszaOcenaKazdegoStudenta));
+        return DaneUczelni.Studenci.GroupJoin(
+                DaneUczelni.Zapisy.Where(z=>z.OcenaKoncowa != null),
+                s => s.Id,
+                z => z.StudentId,
+                (s, z) => new { s, z }
+            )
+            .Where(sz => sz.z.Any())
+            .Select(sz => $"{sz.s.Imie}, {sz.s.Nazwisko}, {sz.z.Max(z => z.OcenaKoncowa)}");
     }
-
-    /// <summary>
-    /// Wyzwanie:
-    /// Znajdź studentów, którzy mają więcej niż jeden aktywny zapis.
-    /// Zwróć pełne imię i nazwisko oraz liczbę aktywnych przedmiotów.
-    ///
-    /// SQL:
-    /// SELECT s.Imie, s.Nazwisko, COUNT(*)
-    /// FROM Studenci s
-    /// JOIN Zapisy z ON s.Id = z.StudentId
-    /// WHERE z.CzyAktywny = 1
-    /// GROUP BY s.Imie, s.Nazwisko
-    /// HAVING COUNT(*) > 1;
-    /// </summary>
+    
     public IEnumerable<string> Wyzwanie01_StudenciZWiecejNizJednymAktywnymPrzedmiotem()
     {
-        throw Niezaimplementowano(nameof(Wyzwanie01_StudenciZWiecejNizJednymAktywnymPrzedmiotem));
+        return DaneUczelni.Studenci.GroupJoin(
+                DaneUczelni.Zapisy.Where(z => z.CzyAktywny),
+                s => s.Id,
+                z => z.StudentId,
+                (s, z) => new { s, z }
+            )
+            .Where(sz => sz.z.Any())
+            .Where(sz => sz.z.Count() > 1)
+            .Select(sz => $"{sz.s.Imie}, {sz.s.Nazwisko},  {sz.z.Count()}");
     }
-
-    /// <summary>
-    /// Wyzwanie:
-    /// Wypisz przedmioty startujące w kwietniu 2026, dla których żaden zapis nie ma jeszcze oceny końcowej.
-    ///
-    /// SQL:
-    /// SELECT p.Nazwa
-    /// FROM Przedmioty p
-    /// JOIN Zapisy z ON p.Id = z.PrzedmiotId
-    /// WHERE MONTH(p.DataStartu) = 4 AND YEAR(p.DataStartu) = 2026
-    /// GROUP BY p.Nazwa
-    /// HAVING SUM(CASE WHEN z.OcenaKoncowa IS NOT NULL THEN 1 ELSE 0 END) = 0;
-    /// </summary>
+    
     public IEnumerable<string> Wyzwanie02_PrzedmiotyStartujaceWKwietniuBezOcenKoncowych()
     {
-        throw Niezaimplementowano(nameof(Wyzwanie02_PrzedmiotyStartujaceWKwietniuBezOcenKoncowych));
+        return DaneUczelni.Przedmioty
+            .Where(p => p.DataStartu.Month == 4 && p.DataStartu.Year == 2026)
+            .GroupJoin(
+                DaneUczelni.Zapisy,
+                p => p.Id,
+                z => z.PrzedmiotId,
+                (p, z) => new { p, z }
+            )
+            .Where(pz => pz.z.All(z=>z.OcenaKoncowa == null))
+            .Select(pz => pz.p.Nazwa);
     }
-
-    /// <summary>
-    /// Wyzwanie:
-    /// Oblicz średnią ocen końcowych dla każdego prowadzącego na podstawie wszystkich jego przedmiotów.
-    /// Pomiń brakujące oceny, ale pozostaw samych prowadzących w wyniku.
-    ///
-    /// SQL:
-    /// SELECT pr.Imie, pr.Nazwisko, AVG(z.OcenaKoncowa)
-    /// FROM Prowadzacy pr
-    /// LEFT JOIN Przedmioty p ON p.ProwadzacyId = pr.Id
-    /// LEFT JOIN Zapisy z ON z.PrzedmiotId = p.Id
-    /// WHERE z.OcenaKoncowa IS NOT NULL
-    /// GROUP BY pr.Imie, pr.Nazwisko;
-    /// </summary>
+    
     public IEnumerable<string> Wyzwanie03_ProwadzacyISredniaOcenNaIchPrzedmiotach()
     {
-        throw Niezaimplementowano(nameof(Wyzwanie03_ProwadzacyISredniaOcenNaIchPrzedmiotach));
-    }
+        return DaneUczelni.Prowadzacy
+            .GroupJoin(
+                DaneUczelni.Przedmioty,
+                pr => pr.Id,
+                p => p.ProwadzacyId,
+                (pr, p) => new { pr, p }
+            )
+            .SelectMany(prp => prp.p.DefaultIfEmpty(),
+                (prp, p) => new { pr = prp.pr, p })
+            .GroupJoin(
+                DaneUczelni.Zapisy,
+                prp => prp.p == null ? (int?)null : prp.p.Id,
+                z => z.PrzedmiotId,
+                (prp, z) => new { prp, z }
+            )
+            .GroupBy(prpz => new { prpz.prp.pr.Imie, prpz.prp.pr.Nazwisko })
+            .Select(x =>
+            {
+                var oceny = x.SelectMany(z => z.z)
+                    .Where(z => z.OcenaKoncowa != null)
+                    .Select(z => z.OcenaKoncowa);
 
-    /// <summary>
-    /// Wyzwanie:
-    /// Pokaż miasta studentów oraz liczbę aktywnych zapisów wykonanych przez studentów z danego miasta.
-    /// Posortuj wynik malejąco po liczbie aktywnych zapisów.
-    ///
-    /// SQL:
-    /// SELECT s.Miasto, COUNT(*)
-    /// FROM Studenci s
-    /// JOIN Zapisy z ON s.Id = z.StudentId
-    /// WHERE z.CzyAktywny = 1
-    /// GROUP BY s.Miasto
-    /// ORDER BY COUNT(*) DESC;
-    /// </summary>
+                var wynik = oceny.Any() ? oceny.Average().ToString() : "Brak";
+
+                return $"{x.Key.Imie}, {x.Key.Nazwisko},  {wynik}";
+
+            });
+    }
+    
     public IEnumerable<string> Wyzwanie04_MiastaILiczbaAktywnychZapisow()
     {
-        throw Niezaimplementowano(nameof(Wyzwanie04_MiastaILiczbaAktywnychZapisow));
+        return DaneUczelni.Studenci.GroupJoin(
+                DaneUczelni.Zapisy.Where(z => z.CzyAktywny),
+                s => s.Id,
+                z => z.StudentId,
+                (s, z) => new { s, z }
+            )
+            .GroupBy(sz => sz.s.Miasto)
+            .OrderByDescending(x => x.SelectMany(sz => sz.z).Count())
+            .Select(x => $"{x.Key},  {x.SelectMany(sz => sz.z).Count()}");
     }
 
     private static NotImplementedException Niezaimplementowano(string nazwaMetody)
